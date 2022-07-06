@@ -21,6 +21,23 @@ impl Context {
         generate_subkeys(self, &key);
     }
 
+    pub fn keysize(&self) -> usize {
+        match self.mode {
+            Mode::ECB_128 | Mode::CBC_128 | Mode::CTR_128 => 128,
+            Mode::ECB_192 | Mode::CBC_192 | Mode::CTR_192 => 192,
+            Mode::ECB_256 | Mode::CBC_256 | Mode::CTR_256 => 256,
+        }
+    }
+
+    pub fn rounds(&self) -> usize {
+        match self.keysize() {
+            128 => 11,
+            192 => 13,
+            256 => 15,
+            _ => panic!("Invalid keysize value!"),
+        }
+    }
+
     pub fn is_ecb(&self) -> bool {
         match self.mode {
             Mode::ECB_128 | Mode::ECB_192 | Mode::ECB_256 => true,

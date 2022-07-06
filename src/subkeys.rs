@@ -7,15 +7,11 @@ const RCON: [u8; 10] = include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tables/rco
 
 // Helpers
 
-fn words_for_mode(mode: Mode) -> usize {
-    match mode {
-        Mode::ECB_128 | Mode::CBC_128 | Mode::CTR_128 => 4,
-        Mode::ECB_192 | Mode::CBC_192 | Mode::CTR_192 => 6,
-        Mode::ECB_256 | Mode::CBC_256 | Mode::CTR_256 => 8,
-    }
-}
-
 fn get_word(buffer: &[u8], index: usize) -> Word {
+    if buffer.len() < ((index + 1) * WORD_BYTES) {
+        panic!("OOB!");
+    }
+
     [
         buffer[index * WORD_BYTES],
         buffer[(index * WORD_BYTES) + 1],
@@ -25,6 +21,10 @@ fn get_word(buffer: &[u8], index: usize) -> Word {
 }
 
 fn set_word(buffer: &mut [u8], index: usize, w: &Word) {
+    if buffer.len() < ((index + 1) * WORD_BYTES) {
+        panic!("OOB!");
+    }
+
     buffer[index * WORD_BYTES] = w[0];
     buffer[(index * WORD_BYTES) + 1] = w[1];
     buffer[(index * WORD_BYTES) + 2] = w[2];
@@ -47,7 +47,7 @@ pub(crate) fn rcon(index: usize) -> Word {
 }
 
 pub(crate) fn sub_word(w: &Word) -> Word {
-    let mut s = *w;
+    let mut s = w.clone();
 
     for i in 0..4 {
         sub_byte(&mut s[i]);
@@ -58,17 +58,9 @@ pub(crate) fn sub_word(w: &Word) -> Word {
 
 // Subkeys
 
-pub(crate) fn rounds_for_mode(mode: Mode) -> usize {
-    match mode {
-        Mode::ECB_128 | Mode::CBC_128 | Mode::CTR_128 => 11,
-        Mode::ECB_192 | Mode::CBC_192 | Mode::CTR_192 => 13,
-        Mode::ECB_256 | Mode::CBC_256 | Mode::CTR_256 => 15,
-    }
-}
-
 pub(crate) fn generate_subkeys(ctx: &mut Context, key: &[u8]) {
-    for i in 0..(rounds_for_mode(ctx.mode) * 4) {
-        let words = words_for_mode(ctx.mode);
+    for i in 0..ctx.rounds() * WORD_BYTES {
+        let words = ctx.keysize() / (WORD_BYTES * 8);
         if i < words {
             let w = get_word(&key, i);
             set_word(&mut ctx.subkeys, i, &w);

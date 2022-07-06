@@ -1,2 +1,2 @@
 # AES
-Very simple AES implementation in rust. The algorithms are not optimized as the goal was to understand the math behind them; therefore it is likely not secure and shall not be used for anything serious. Feel free to use it as a reference, though.
+Very simple AES implementation in rust (ECB, CBC; CTR wip). The algorithms are not optimized as the goal was to understand the math behind them; therefore it is likely not secure and shall not be used for anything serious. Feel free to use it as a reference, though.

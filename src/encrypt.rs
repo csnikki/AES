@@ -1,17 +1,14 @@
 use crate::def::*;
 use crate::pass::*;
-use crate::subkeys::*;
 
 // Helpers
 
 fn encrypt_update(ctx: &Context, chunk: &mut Chunk, round: usize) {
-    let rounds = rounds_for_mode(ctx.mode);
-
     if round > 0 {
         sub_bytes(chunk);
         shift_rows(chunk);
 
-        if round < (rounds - 1) {
+        if round < (ctx.rounds() - 1) {
             mix_columns(chunk);
         }
     }
@@ -20,9 +17,7 @@ fn encrypt_update(ctx: &Context, chunk: &mut Chunk, round: usize) {
 }
 
 fn encrypt_chunk(ctx: &Context, chunk: &mut Chunk) {
-    let rounds = rounds_for_mode(ctx.mode);
-
-    for round in 0..rounds {
+    for round in 0..ctx.rounds() {
         encrypt_update(ctx, chunk, round);
     }
 }
